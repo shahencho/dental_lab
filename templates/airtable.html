@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Airtable Orders for {{ clinic }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        img.thumb {
+            width: 40px;
+            height: auto;
+            display: block;
+            margin: auto;
+        }
+        small {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h2>🦷 Airtable Orders for {{ clinic }}</h2>
+
+    {% if rows %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date Submitted</th>
+                    <th>Lab Name</th>
+                    <th>DUE DATE</th>
+                    <th>Days To Prepare</th>
+                    <th>Patient First Name</th>
+                    <th>Patient Last Name</th>
+                    <th>Patient DOB</th>
+                    <th>Shade</th>
+                    <th>Notes</th>
+                    <th>Attachments</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.get('Order ID', '') }}</td>
+                        <td>{{ row.get('Date Submitted', '') }}</td>
+                        <td>{{ row.get('Lab Name', '') }}</td>
+                        <td>{{ row.get('DUE DATE', '') }}</td>
+                        <td>{{ row.get('Days To Prepare', '') }}</td>
+                        <td>{{ row.get('Patient First Name', '') }}</td>
+                        <td>{{ row.get('Patient Last Name', '') }}</td>
+                        <td>{{ row.get('Patient DOB', '') }}</td>
+                        <td>{{ row.get('Shade', '') }}</td>
+                        <td>{{ row.get('Notes', '') }}</td>
+                        <td>
+                            {% set attachments = row.get('Attachments') %}
+                            {% if attachments and attachments[0]['thumbnails'] %}
+                                <a href="{{ attachments[0]['url'] }}" target="_blank">
+                                    <img class="thumb" src="{{ attachments[0]['thumbnails']['small']['url'] }}" alt="attachment">
+                                </a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>{{ row.get('Status', '') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No records found for this clinic.</p>
+    {% endif %}
+</body>
+</html>

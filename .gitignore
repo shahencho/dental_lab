@@ -1,0 +1,41 @@
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs and history
+*.log
+.history*
+*.sqlite3
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Build artifacts
+/dist
+/build
+/*.egg-info
