@@ -27,6 +27,8 @@ def login():
         if clinic and check_password_hash(clinic['password_hash'], password):
             session['clinic'] = clinic['dental_clinic_name']
             session['clinic_number'] = clinic['mobile_number']
+            print("📛 Password hash from DB:", clinic['password_hash'])
+
             return redirect(url_for('form'))
 
         return "Invalid credentials", 403
