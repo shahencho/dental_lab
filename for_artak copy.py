@@ -9,5 +9,7 @@ url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
 headers = {"Authorization": f"Bearer {token}"}
 res = requests.get(url, headers=headers)
 
+
+
 print(res.status_code)
 print(res.json())
