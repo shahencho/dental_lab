@@ -56,11 +56,11 @@ data = {
     "record_id": clinic_id,
     "dental_clinic_name": clinic_name,
     "clinic_phone_number": phone_number,
-    "patients_first_name": "shah Vardis sas aasssa with image",
-    "patients_last_name": "shaha HISHI22T with image",
+    "patients_first_name": "DUE DATEsss________notgood",
+    "patients_last_name": "due-datedue-datedue-date",
     "patients_DOB": "01/31/1990",
-    "due-date": "01/31/2005",
-    "shade": "Artshahena2k HISHIT with image",
+    "due_date": "01/31/2005",
+    "shade": "GALISA?  HISHIT with image",
     "notes": "2 HISHIT with image"
 }
 

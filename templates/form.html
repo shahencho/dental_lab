@@ -10,6 +10,18 @@
       background-color: #cbd9d3;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
+    .flashes {
+      margin-bottom: 20px;
+    }
+    .alert {
+      padding: 10px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+    }
+
   </style>
 </head>
 <body class="min-h-screen bg-gray-100 py-10 px-4">
@@ -46,6 +58,21 @@
       </p>
     </div>
     -->
+
+    <!-- templates/form.html -->
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flashes">
+          {% for message in messages %}
+            <div class="alert alert-danger" role="alert">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
 
     <!-- Form -->
     <form action="/form" method="POST" enctype="multipart/form-data" class="space-y-8">
@@ -218,9 +245,9 @@
     </form>
 
     <!-- Recent Orders Table -->
-    <h4 class="mt-10 mb-4 text-xl font-semibold text-gray-800">Your Existing Orders</h4>
+    <!-- <h4 class="mt-10 mb-4 text-xl font-semibold text-gray-800">Your Existing Orders</h4> -->
     <div class="overflow-x-auto">
-      <h2 class="text-lg font-semibold text-gray-700 mt-10 mb-4">Your Existing Orders</h2>
+      <h2 class="mt-10 mb-4 text-xl font-semibold text-gray-800">Your Existing Orders</h2>
 
         <div class="overflow-x-auto">
           <table class="min-w-full bg-white border border-gray-200 shadow rounded-md text-sm">
@@ -258,7 +285,7 @@
 
   </div>
 
-    <iframe class="airtable-embed" src="https://airtable.com/embed/appBFL3HFmpcxJxuU/shriVVN3CHlk7xb2Q?viewControls=on" frameborder="0" onmousewheel="" width="100%" height="533" style="background: transparent; border: 1px solid #ccc;"></iframe>
+    <!-- <iframe class="airtable-embed" src="https://airtable.com/embed/appBFL3HFmpcxJxuU/shriVVN3CHlk7xb2Q?viewControls=on" frameborder="0" onmousewheel="" width="100%" height="533" style="background: transparent; border: 1px solid #ccc;"></iframe> -->
 
 </body>
 </html>

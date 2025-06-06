@@ -5,7 +5,7 @@ info:
   description: Testable API for sending dental clinic data and image uploads
 
 servers:
-  - url: https://hook.us2.make.com 
+  - url: https://hook.us2.make.com/vpkolrkjd27a0b9h81ku87a5l3dtd14t
     description: Production server
 
 paths:

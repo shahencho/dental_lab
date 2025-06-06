@@ -1,10 +1,15 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, Response, flash
 from db_config import get_db_connection
+
 from werkzeug.security import check_password_hash
 from dotenv import load_dotenv
 import os
 import requests
 import json
+import re
+
+from utils import print_readable_response 
+
 
 load_dotenv()
 
@@ -23,7 +28,7 @@ def login():
         
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM Dental_clinic WHERE login_name = %s", (actual_loginname,))
+        cursor.execute("SELECT * FROM dental_clinic WHERE login_name = %s", (actual_loginname,))
         row_from_db = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -52,40 +57,85 @@ def form():
     if 'login' not in session:
         return redirect(url_for('login'))
     
-
     
-
-
     success_message = None
 
     getcurrentlogin = session['login']
-
     
     data_from_airtable= get_clinic_metadata(getcurrentlogin, "Dental Clinics")
 
 
-
     # Handle form submission
     if request.method == 'POST':
+
         
+                # Mandatory Fields
+        name_strip = request.form.get('name', '').strip()
+        due_date_strip = request.form.get('due_date', '').strip()
+
+        if not name_strip or not due_date_strip:
+            flash("First Name and Due Date are required.")
+            return redirect(url_for('form'))
         
-        # Convert dates to MM/DD/YYYY
-        dob = datetime.strptime(request.form['dob'], "%Y-%m-%d").strftime("%m/%d/%Y")
-        due_date = datetime.strptime(request.form['due_date'], "%Y-%m-%d").strftime("%m/%d/%Y")
+        # sd
+        try:
+            due_date = datetime.strptime(due_date_strip, "%Y-%m-%d")
+            if due_date.year < 1900 or due_date.year > 2100:
+                raise ValueError("Unrealistic due date")
+            due_date = due_date.strftime("%m/%d/%Y")
+        except ValueError:
+            flash("Invalid due date. Please enter a valid date between 1900 and 2100.")
+
+            return redirect(url_for('form'))
+
+
+
+        # Due Date parsing
+        # try:
+        #     due_date = datetime.strptime(due_date_strip, "%Y-%m-%d").strftime("%m/%d/%Y")
+        # except ValueError:
+        #     flash("Invalid due date format.")
+        #     return redirect(url_for('form'))
+
+        # Optional Fields
+        last_name_strip = request.form.get('last_name', '').strip()
+        dob_raw_strip = request.form.get('dob', '').strip()
+        shade_strip = request.form.get('shade', '').strip()
+        notes_strip = request.form.get('notes', '').strip()
+        special_instructions_strip = request.form.get('specialInstructions', '').strip()
+        doctor_strip = request.form.get('doctor', 'Default Doctor') #not used in the payload but can be used for future reference
+
+        dob = ''
+        if dob_raw_strip:
+            try:
+                dob = datetime.strptime(dob_raw_strip, "%Y-%m-%d").strftime("%m/%d/%Y")
+            except ValueError:
+                flash("Invalid DOB date format.")
+                return redirect(url_for('form'))
+
+            # # Convert dates to MM/DD/YYYY
+            # dob = datetime.strptime(request.form['dob'], "%Y-%m-%d").strftime("%m/%d/%Y")
+            # due_date = datetime.strptime(request.form['due_date'], "%Y-%m-%d").strftime("%m/%d/%Y")
 
         payload = {
             "record_id": data_from_airtable["record_id"],
             "dental_clinic_name": data_from_airtable["dental_clinic_name"],
             "clinic_phone_number": data_from_airtable["clinic_phone_number"],
-            "patients_first_name": request.form['name'],
-            "patients_last_name": request.form['last_name'],
+            "patients_first_name": name_strip,
+            "patients_last_name": last_name_strip,
             "patients_DOB": dob,
-            "due-date": due_date,
-            "shade": request.form['shade'],
-            "notes": request.form['notes']
+            "due_date": due_date,
+            "shade": shade_strip,
+            "notes":  notes_strip,
+            # "doctor": doctor_strip,  # Optional field, can be used for future reference
             # "specialInstructions": request.form.get("specialInstructions", "")
 
         }
+
+        
+
+
+
 
 
 
@@ -109,18 +159,41 @@ def form():
             print("📤 Sending webhook to:", webhook_url)
             print("📤 Payload:",payload)
 
-            # response = requests.post(webhook_url, data=payload)
-
-            print("✅ Webhook Response:", response.status_code)
-            print("📥Payload ", payload)
-            print("📥", response.text)
+           
 
             if response.status_code == 200:
 
+                session['response_url'] = response.text
+                print("📥session['response_url'] =====", session['response_url'])
+
+                # Use regex to replace "/edit?usp=drivesdk" with "/preview" 
+                modified_url = re.sub(r"/edit\?usp=drivesdk$", "/preview", response.text)
+                print("🌐 Modified URL:", modified_url)
+                session['response_url'] = modified_url  # Store in session for later use
+                print("📥session['response_url'] after modification =====", session['response_url'])
+                
                 # After successful response from webhook
                 # record_id = response.json().get("record_id")  # only if webhook returns it
                 # print("📦 Record ID from webhook:", record_id)
                 # session['last_record_id'] = record_id
+
+
+                                # Read the response URL if available
+                # response_url = response.headers.get("Location") or response.json().get("url") or response.json().get("link")
+                # if response_url:
+                #     print(f"🌐 Response URL: {response_url}")
+                #     session['response_url'] = response_url  # Store in session for later use
+
+                # # After successful response from webhook
+                # record_id = response.json().get("record_id")  # Only if webhook returns it
+                # print(f"📦 Record ID from webhook: {record_id}")
+                # session['last_record_id'] = record_id
+
+                # Redirect to success page
+                return redirect(url_for('success'))
+
+
+
                 return redirect(url_for('success'))
             else:
                 success_message = f"❌ Error: Submission failed with status {response.status_code}"
@@ -165,34 +238,39 @@ def form():
 
  
 
-
 @app.route('/success')
 def success():
-    airtable_token = os.getenv("AIRTABLE_TOKEN")
-    base_id = os.getenv("AIRTABLE_BASE")
-    table_name = os.getenv("AIRTABLE_TABLE")
-    url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
-
-    headers = {"Authorization": f"Bearer {airtable_token}"}
-
-    params = {
-        "pageSize": 1,
-        "sort[0][field]": "Date Submitted",  # Ensure Airtable is sorted by newest
-        "sort[0][direction]": "desc"
-    }
-    # params = {"pageSize": 1}
 
     label_url = None
-    response = requests.get(url, headers=headers, params=params)
-
-
-    if response.status_code == 200:
-        records = response.json().get("records", [])
-        if records:
-            label_url = records[0]["fields"].get("View Label URL")
-            print("📄 Label URL:", label_url)
+    label_url=  session.get('response_url')
 
     return render_template("success.html", label_url=label_url)
+
+    # airtable_token = os.getenv("AIRTABLE_TOKEN")
+    # base_id = os.getenv("AIRTABLE_BASE")
+    # table_name = os.getenv("AIRTABLE_TABLE")
+    # url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
+
+    # headers = {"Authorization": f"Bearer {airtable_token}"}
+
+    # params = {
+    #     "pageSize": 1,
+    #     "sort[0][field]": "Date Submitted",  # Ensure Airtable is sorted by newest
+    #     "sort[0][direction]": "desc"
+    # }
+    # # params = {"pageSize": 1}
+
+    # label_url = None
+    # response = requests.get(url, headers=headers, params=params)
+
+
+    # if response.status_code == 200:
+    #     records = response.json().get("records", [])
+    #     if records:
+    #         label_url = records[0]["fields"].get("View Label URL")
+    #         print("📄 Label URL:", label_url)
+
+
 
 
 
@@ -231,6 +309,36 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+from flask import Response, session
+import requests
+
+from flask import send_file, Response
+import io
+
+@app.route('/download-pdf')
+def download_pdf():
+    preview_url = session.get('response_url')
+    if not preview_url or '/d/' not in preview_url:
+        return "Invalid document URL", 400
+
+    try:
+        doc_id = preview_url.split('/d/')[1].split('/')[0]
+    except IndexError:
+        return "Could not extract document ID", 400
+
+    pdf_url = f"https://docs.google.com/document/d/{doc_id}/export?format=pdf"
+
+    r = requests.get(pdf_url)
+    if r.status_code != 200:
+        return "Could not fetch PDF", 502
+
+    # Return the PDF directly from memory 
+    return send_file(
+        io.BytesIO(r.content),
+        mimetype='application/pdf',
+        as_attachment=False,
+        download_name='label.pdf'
+    )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5005)

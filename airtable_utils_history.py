@@ -20,9 +20,15 @@ def history_orders(login_value, table_name):
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
+    # params = {
+    #     # Filter by Login field equals login_value
+    #     "filterByFormula": f"{{Login}}='{login_value}'"
+    # }
+
     params = {
-        # Filter by Login field equals login_value
-        "filterByFormula": f"{{Login}}='{login_value}'"
+    "filterByFormula": f"{{Login}}='{login_value}'",
+    "sort[0][field]": "Date Submitted",
+    "sort[0][direction]": "desc"
     }
 
     res = requests.get(url, headers=headers, params=params)
