@@ -52,6 +52,13 @@ from airtable_utils import get_clinic_metadata
 from airtable_utils_history import history_orders
 from datetime import datetime
 import traceback
+import time
+
+# Example: Sleep for 1 second
+time.sleep(1)
+
+# Get current timestamp
+timestamp = time.time()
 @app.route('/form', methods=['GET', 'POST'])
 def form():
     if 'login' not in session:
@@ -165,6 +172,26 @@ def form():
 
                 session['response_url'] = response.text
                 print("📥session['response_url'] =====", session['response_url'])
+
+                #
+                 # Wait and retry if it's not a Google Docs link
+                max_wait = 5
+                interval = 1
+                waited = 0
+
+                while not re.search(r'/document/d/.+/(edit|preview)', session['response_url']) and waited < max_wait:
+                    print(f"⏳ Waiting for URL... ({waited}s)")
+                    time.sleep(interval)
+                    waited += interval
+
+                    # Optionally re-check or re-fetch from webhook if supported
+                    # But here we just check if the original response_url updates (e.g. via polling API)
+
+                    # If response_url is a redirect endpoint or status page, you might request it again here
+                    # For example:
+                    # followup = requests.get(response_url)
+                    # if followup.status_code == 200:
+                    #     response_url = followup.text.strip()
 
                 # Use regex to replace "/edit?usp=drivesdk" with "/preview" 
                 modified_url = re.sub(r"/edit\?usp=drivesdk$", "/preview", response.text)
