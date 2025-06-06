@@ -166,7 +166,18 @@ def form():
             print("📤 Sending webhook to:", webhook_url)
             print("📤 Payload:",payload)
 
-           
+            print("📤 aaaaaaaaaaaaaaaaaaaaaaaa:" )
+            print("📤 response.status_code:", response.status_code)
+            print("📤 response.text:", response.text)
+            print("📤 response.headers:", response.headers)
+            print("📤 response.headers:", response.text)
+            # try:
+            #     print("📤 response.json():", response.json())
+            # except Exception as e:
+            #     print("❌ response.json() failed:", str(e))
+
+
+            print("📤 aaaaaaaaaaaaaaaaaaaaaaaa:" )
 
             if response.status_code == 200:
 
@@ -192,7 +203,11 @@ def form():
                     # followup = requests.get(response_url)
                     # if followup.status_code == 200:
                     #     response_url = followup.text.strip()
-
+                # Final validation after waiting
+                if not re.search(r'/document/d/.+/(edit|preview)', session['response_url']):
+                    print("🚨🚨🚨 BIG ALARM! Webhook did NOT return a valid Google Docs URL after waiting.")
+                    print(f"🧨 Final response text: {session['response_url']}")
+                    print("⚠️ Proceeding with placeholder link — PDF may not be ready yet.")
                 # Use regex to replace "/edit?usp=drivesdk" with "/preview" 
                 modified_url = re.sub(r"/edit\?usp=drivesdk$", "/preview", response.text)
                 print("🌐 Modified URL:", modified_url)

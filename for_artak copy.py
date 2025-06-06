@@ -1,55 +1,15 @@
-openapi: 3.0.0
-info:
-  title: Dental Clinic Webhook API
-  version: 1.0.0
-  description: Testable API for sending dental clinic data and image uploads
+import requests
 
-servers:
-  - url: https://hook.us2.make.com 
-    description: Production server
+token = "patn2i70wkWoPc6oJ.47cc30c3d1aa2a98408c72984007832ce06bfb6e20d312712b1b24d28cf12c03"
+base_id = "app0gf8ECLPKzB9uN"
+table_name = "Orders"  # replace this
 
-paths:
-  /vpkolrkjd27a0b9h81ku87a5l3dtd14t:
-    post:
-      summary: Send Dental Clinic Payload
-      description: Submit clinic metadata and optional image
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                record_id:
-                  type: string
-                  example: rec12345
-                dental_clinic_name:
-                  type: string
-                  example: Bright Smiles
-                clinic_phone_number:
-                  type: string
-                  example: (929) 536-9700
-                patients_first_name:
-                  type: string
-                  example: John
-                patients_last_name:
-                  type: string
-                  example: Doe
-                patients_DOB:
-                  type: string
-                  example: 01/01/1990
-                due-date:
-                  type: string
-                  example: 01/10/2025
-                shade:
-                  type: string
-                  example: A2
-                notes:
-                  type: string
-                  example: Follow-up needed
-                image:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Success
+url = f"https://api.airtable.com/v0/{base_id}/{table_name}"
+
+headers = {"Authorization": f"Bearer {token}"}
+res = requests.get(url, headers=headers)
+
+
+
+print(res.status_code)
+print(res.json())

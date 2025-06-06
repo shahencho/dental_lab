@@ -191,6 +191,7 @@
       </fieldset>
 
       <!-- Attachments -->
+<!-- Attachments -->
       <fieldset class="border border-gray-200 rounded-md p-4">
         <legend class="text-base font-medium text-gray-700 px-2">📁 Attachments</legend>
         <div class="mt-4">
@@ -204,6 +205,7 @@
               type="file"
               accept="application/pdf,image/*,.stl"
               class="hidden"
+              onchange="showSelectedFileName(event)"
             />
             <label for="image" class="cursor-pointer block">
               <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,10 +214,26 @@
               </svg>
               <span class="text-sm text-gray-600">Drag and drop files here or click to browse</span>
             </label>
+            <div id="file-feedback" class="mt-2 text-sm text-green-600 font-medium hidden"></div>
           </div>
           <p class="mt-2 text-xs text-gray-500">Accepted formats: PDF, JPG, PNG, STL</p>
         </div>
       </fieldset>
+
+      <script>
+        function showSelectedFileName(event) {
+          const fileInput = event.target;
+          const feedback = document.getElementById('file-feedback');
+          if (fileInput.files.length > 0) {
+            feedback.textContent = `✔️ Loaded: ${fileInput.files[0].name}`;
+            feedback.classList.remove('hidden');
+          } else {
+            feedback.textContent = '';
+            feedback.classList.add('hidden');
+          }
+        }
+      </script>
+
 
       <!-- Notes & Instructions -->
       <fieldset class="border border-gray-200 rounded-md p-4">
