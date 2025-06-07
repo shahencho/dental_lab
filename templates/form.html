@@ -43,6 +43,7 @@
         </form>
       </div>
 
+      
 
     <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">DENTAL ORDER REQUEST</h2>
 
@@ -277,6 +278,7 @@
                 <th class="px-4 py-2 border-b">Last Name</th>
                 <th class="px-4 py-2 border-b">Notes</th>
                 <th class="px-4 py-2 border-b">Status</th>
+                <th class="px-4 py-2 border-b">Label</th>
               </tr>
             </thead>
             <tbody>
@@ -288,10 +290,19 @@
                 <td class="px-4 py-2 border-b">{{ order.patient_last_name }}</td>
                 <td class="px-4 py-2 border-b">{{ order.notes }}</td>
                 <td class="px-4 py-2 border-b">{{ order.status }}</td>
+                <td class="px-4 py-2 border-b">
+                  {% if order.label != 'Not Found' %}
+                    {% set pdf_url = order.label.replace('/edit?usp=drivesdk', '/export?format=pdf') %}
+                    <a href="{{ pdf_url }}" target="_blank" class="text-blue-600 hover:underline">📄 Download PDF</a>
+                  {% else %}
+                    <span class="text-gray-500">No Label</span>
+                  {% endif %}
+                </td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
+
           </div>
           <div class="mt-4">
             <p class="text-sm text-gray-500">Total Orders: {{ orders|length }}</p>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Confirmation</title>
+  <style>
+    body {
+      background-color: #b4d1cd;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 40px 20px;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 5px 0 20px;
+      font-size: 16px;
+    }
+
+    .label-link {
+      font-weight: bold;
+      text-decoration: underline;
+      color: #000;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    #pdf-container {
+      margin: 20px auto;
+      width: 100%;
+      max-width: 900px;
+      border: 1px solid #ccc;
+      background-color: white;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    button {
+      background-color: #0275d8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 0 10px;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #025aa5;
+    }
+
+    .ok-button {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 30px;
+      background-color: #222;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>THANK YOU</h1>
+  <p>Your order has been received.</p>
+
+  <a href="{{ session['response_url'] }}" class="label-link">PLEASE PRINT THIS LABEL AND ATTACH TO THE CASE</a>
+
+  <iframe id="pdfFrame" src="{{ label_url }}" width="60%" height="600px" style="border: none;"></iframe>
+
+  <div class="button-container">
+    <button class="print-button" onclick="printPDF()">🖨️ Print</button>
+    <a class="ok-button" href="/form">OK</a>
+  </div>
+
+  <script>
+  function printPDF() {
+    const iframe = document.getElementById('pdfFrame');
+
+    // Step 1: Switch iframe to PDF version
+    iframe.src = "/download-pdf";
+
+    // Step 2: Wait for PDF to load before printing
+    iframe.onload = () => {
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        } catch (e) {
+          alert("Printing failed. Please try again.");
+        }
+
+        // Step 3: Restore original preview after printing
+        window.onafterprint = () => {
+          iframe.src = "{{ label_url }}";  // restore original preview
+        };
+      }, 1000); // give time for PDF to load
+    };
+
+    iframe.onerror = () => {
+      alert("Failed to load PDF for printing.");
+    };
+  }
+  </script>
+ 
+
+</body>
+
+</html>

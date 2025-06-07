@@ -33,6 +33,8 @@ def history_orders(login_value, table_name):
 
     res = requests.get(url, headers=headers, params=params)
 
+    
+
     if res.status_code == 200:
         records = res.json().get('records', [])
 
@@ -44,15 +46,19 @@ def history_orders(login_value, table_name):
         results = []
         for record in records:
             fields = record['fields']
+            print("🔍 View Label:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddddddddd", fields.get("View Label URL"))
+
             result = {
                 "record_id": record['id'],
-                "date_submitted": fields.get("Date Submitted", "Not Found"),
-                "due_date": fields.get("DUE DATE", "Not Found"),
-                "patient_first_name": fields.get("Patient First Name", "Not Found"),
-                "patient_last_name": fields.get("Patient Last Name", "Not Found"),
-                "notes": fields.get("Notes", "Not Found"),
-                "status": fields.get("Status", "Not Found")
+                "date_submitted": fields.get("Date Submitted", " "),
+                "due_date": fields.get("DUE DATE", " Not "),
+                "patient_first_name": fields.get("Patient First Name", " "),
+                "patient_last_name": fields.get("Patient Last Name", " "),
+                "notes": fields.get("Notes", " "),
+                "status": fields.get("Status", " "),
+                "label": fields.get("View Label URL", " ")
             }
+              
             results.append(result)
 
         print("📦 history_orders -> Airtable Results:", results)
