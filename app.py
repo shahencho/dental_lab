@@ -450,7 +450,7 @@ def register():
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO Dental_clinic (login_name, password_hash, mobile_number)
+            INSERT INTO dental_clinic (login_name, password_hash, mobile_number)
             VALUES (%s, %s, %s)
             """,
             (login, hashed_password, clinic_phone)
@@ -461,6 +461,7 @@ def register():
 
         # flash("✅ Clinic registered successfully!")
         flash(f"✅ Clinic registered successfully!! <a href='{url_for('form')}' class='underline text-blue-600'>Start Dental Order Form</a>")
+        
 
         return redirect(url_for("register"))
 
@@ -547,7 +548,7 @@ def update_profile():
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE Dental_clinic SET password_hash = %s, mobile_number = %s WHERE login_name = %s",
+                "UPDATE dental_clinic SET password_hash = %s, mobile_number = %s WHERE login_name = %s",
                 (hashed_password, clinic_phone, login)
             )
 

@@ -70,7 +70,7 @@ def register():
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO Dental_clinic (login_name, password_hash, mobile_number)
+            INSERT INTO dental_clinic (login_name, password_hash, mobile_number)
             VALUES (%s, %s, %s)
             """,
             (login, hashed_password, clinic_phone)
