@@ -382,5 +382,198 @@ def download_pdf():
         download_name='label.pdf'
     )
 
+import os
+from flask import Flask, render_template, request, redirect, flash, url_for
+from werkzeug.security import generate_password_hash
+from dotenv import load_dotenv
+import mysql.connector
+from pyairtable import Api
+from pyairtable.formulas import match
+
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+        # Airtable setup
+    AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
+    AIRTABLE_BASE = os.getenv("AIRTABLE_BASE")
+    AIRTABLE_TABLE = "Dental Clinics"  # Corrected from Orders
+    api = Api(AIRTABLE_TOKEN)
+    airtable = api.table(AIRTABLE_BASE, AIRTABLE_TABLE)
+
+
+
+
+    if request.method == "POST":
+        # Mandatory fields
+        login = request.form.get("login")
+        password = request.form.get("password")
+        clinic_name = request.form.get("clinic_name")
+        clinic_phone = request.form.get("clinic_phone")
+        # Optional fields
+        contact_name = request.form.get("contact_name")
+        address = request.form.get("address")
+        email = request.form.get("email")
+        website = request.form.get("website")
+        pin = request.form.get("pin")
+
+        # Validate required fields
+        if not all([login, password, clinic_name, clinic_phone]):
+            flash("All fields are required.")
+            return redirect(url_for("register"))
+
+        # Check if login exists in Airtable
+        existing = airtable.first(formula=match({"Login": login}))
+        if existing:
+            flash(f"❌ Clinic with login '{login}' already exists. Please use another login or contact admin.")
+            return redirect(url_for("register"))
+
+        # Insert into Airtable
+    # Build full record for Airtable
+        new_data = {
+            "Clinic Name": clinic_name,
+            "Login": login,
+            "Phone Number": clinic_phone,
+            "Contact Name": contact_name,
+            "Address": address,
+            "Email": email,
+            "Website": website,
+            "PIN": pin
+
+        }
+        inserted = airtable.create(new_data)
+        print("new_data aaaaaaaaaaaaaa ddddddddddddd", new_data)
+
+        # Insert into MySQL with hashed password
+        hashed_password = generate_password_hash(password)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO Dental_clinic (login_name, password_hash, mobile_number)
+            VALUES (%s, %s, %s)
+            """,
+            (login, hashed_password, clinic_phone)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # flash("✅ Clinic registered successfully!")
+        flash(f"✅ Clinic registered successfully!! <a href='{url_for('form')}' class='underline text-blue-600'>Start Dental Order Form</a>")
+
+        return redirect(url_for("register"))
+
+    return render_template("register.html")
+
+
+from flask import session, request, redirect, url_for, flash, render_template
+from werkzeug.security import generate_password_hash
+from pyairtable import Api
+from pyairtable.formulas import match
+import os
+
+from flask import session, request, redirect, url_for, flash, render_template
+from werkzeug.security import generate_password_hash
+from pyairtable import Api
+from pyairtable.formulas import match
+import os
+
+@app.route("/update-profile", methods=["GET", "POST"])
+def update_profile():
+    # Airtable setup
+    
+    AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
+    AIRTABLE_BASE = os.getenv("AIRTABLE_BASE")
+    AIRTABLE_TABLE = "Dental Clinics"
+    api = Api(AIRTABLE_TOKEN)
+    airtable = api.table(AIRTABLE_BASE, AIRTABLE_TABLE)
+
+    login = session.get("login")
+    if not login:
+        flash("Login required to update profile.")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        password = request.form.get("password")
+        clinic_name = request.form.get("clinic_name")
+        clinic_phone = request.form.get("clinic_phone")
+        contact_name = request.form.get("contact_name")
+        address = request.form.get("address")
+        email = request.form.get("email")
+        website = request.form.get("website")
+        pin = request.form.get("pin")
+
+
+        if not password:
+            flash("❌ You must enter a new password to update your profile.")
+            return redirect(url_for("update_profile"))
+
+        # Fetch clinic record from Airtable
+        record = airtable.first(formula=match({"Login": login}))
+        if not record:
+            flash("❌ Clinic not found.")
+            return redirect(url_for("update_profile"))
+
+        # Update fields in Airtable
+        updated_fields = {
+            "Clinic Name": clinic_name,
+            "Phone Number": clinic_phone,
+            "Contact Name": contact_name,
+            "Address": address,
+            "Email": email,
+            "Website": website,
+            "PIN": pin
+            # "Notes": "Updated via portal"
+        }
+    # Update the record in Airtable
+        try:
+            updated_record = airtable.update(record['id'], updated_fields)
+            print(f"✅ Airtable updated successfully: {updated_record['id']}")
+            print(f"📦 Updated fields: {updated_record.get('fields', {})}")
+        except Exception as e:
+            print(f"❌ Airtable update failed: {str(e)}")
+            flash("Error updating Airtable.")
+            return redirect(url_for("update_profile"))
+
+
+        # Update the record in Airtable
+
+
+        # Optionally update password in MySQL
+        if password:
+            # from db import get_db_connection  # Adjust based on your structure
+            hashed_password = generate_password_hash(password)
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE Dental_clinic SET password_hash = %s, mobile_number = %s WHERE login_name = %s",
+                (hashed_password, clinic_phone, login)
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print("🔐 Password updated in MySQL -----------------",password, clinic_phone,login )
+
+            
+
+
+
+
+        # flash("✅ Profile updated successfully!")
+        flash(f"✅ Profile updated successfully! <a href='{url_for('form')}' class='underline text-blue-600'>Return to Dental Order Form</a>")
+
+        return redirect(url_for("update_profile"))
+
+    # GET request – show form with pre-filled values
+    record = airtable.first(formula=match({"Login": login}))
+    if not record:
+        flash("❌ Clinic not found.")
+        return redirect(url_for("login"))
+
+    return render_template("update_profile.html", clinic=record["fields"])
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5005)
